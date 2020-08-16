@@ -46,7 +46,6 @@ class createPostViewController: UIViewController {
     
     @IBAction func post(_ sender: AnyObject) {
         let userID = Auth.auth().currentUser?.uid
-        
         Database.database().reference().child("profiles").child(userID!).observe(.value, with: { (snapshot) in
             let post: Dictionary<String, AnyObject> = [
                // "userImg":  as AnyObject,
@@ -65,30 +64,30 @@ class createPostViewController: UIViewController {
         
     }
     
-    
-    
     func uploadImageToFireBase(image: UIImage) {
         // Create the file metadata
         let metadata = StorageMetadata()
         metadata.contentType = "image/jpeg"
         
         // Upload the file to the path FILE_NAME
-        Storage.storage().reference().child("FILE_NAME").putData(image.jpegData(compressionQuality: 0.42)!, metadata: metadata) { (metadata, error) in
+        Storage.storage().reference().child("posts").putData(image.jpegData(compressionQuality: 0.42)!, metadata: metadata) { (metadata, error) in
             guard let metadata = metadata else {
-              // Uh-oh, an error occurred!
-              print((error?.localizedDescription)!)
-              return
+                print((error?.localizedDescription))
+                return
             }
-            // Metadata contains file metadata such as size, content-type.
-            let size = metadata.size
             
-            print("Upload size is \(size)")
-            print("Upload success")
+            Storage.storage().reference().child("posts").downloadURL { (imageUrl, error) in
+                if let error = error {
+                    print("error: ", error.localizedDescription)
+                    return
+                }
+                if let userID = Auth.auth().currentUser?.uid {
+                    let currentUserRef = Database.database().reference().child("profiles").child(userID)
+                    currentUserRef.updateChildValues(["profileImage": imageUrl])
+                }
+            }
         }
     }
-    
-
-    
     
     //func uploadToCloud(fileURL : URL) {
       //  let storage = Storage.storage()
@@ -117,9 +116,8 @@ class createPostViewController: UIViewController {
 extension createPostViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate{
       func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
         if let image = info[UIImagePickerController.InfoKey.editedImage.rawValue] as? UIImage {
-              selectedImage = image
               profileImage.image = image
-              uploadImageToFireBase(image: image)
+                uploadImageToFireBase(image: image)
           } else {
               print("image wasnt selected")
           }
