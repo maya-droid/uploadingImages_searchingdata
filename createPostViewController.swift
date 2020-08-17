@@ -36,9 +36,9 @@ class createPostViewController: UIViewController {
     
 
     @objc func handleSelect(){
-        let pickerController = UIImagePickerController()
-        pickerController.delegate = self
-        present(pickerController, animated: true, completion: nil)
+        let imagePicker = UIImagePickerController()
+        imagePicker.delegate = self
+        present(imagePicker, animated: true, completion: nil)
     }
     
     
@@ -46,6 +46,7 @@ class createPostViewController: UIViewController {
     
     @IBAction func post(_ sender: AnyObject) {
         let userID = Auth.auth().currentUser?.uid
+        
         Database.database().reference().child("profiles").child(userID!).observe(.value, with: { (snapshot) in
             let post: Dictionary<String, AnyObject> = [
                // "userImg":  as AnyObject,
@@ -64,30 +65,32 @@ class createPostViewController: UIViewController {
         
     }
     
+    
+    
     func uploadImageToFireBase(image: UIImage) {
         // Create the file metadata
+        uploadImageToFireBase(image: selectedImage)
         let metadata = StorageMetadata()
         metadata.contentType = "image/jpeg"
-        
+        let storageRef = Storage.storage().reference()
+        let profileRef = storageRef.child("images/rivers.jpg")
         // Upload the file to the path FILE_NAME
-        Storage.storage().reference().child("posts").putData(image.jpegData(compressionQuality: 0.42)!, metadata: metadata) { (metadata, error) in
+        Storage.storage().reference().child("FILE_NAME").putData(image.jpegData(compressionQuality: 0.42)!, metadata: metadata) { (metadata, error) in
             guard let metadata = metadata else {
-                print((error?.localizedDescription))
-                return
+              // Uh-oh, an error occurred!
+              print((error?.localizedDescription)!)
+              return
             }
+            // Metadata contains file metadata such as size, content-type.
+            let size = metadata.size
             
-            Storage.storage().reference().child("posts").downloadURL { (imageUrl, error) in
-                if let error = error {
-                    print("error: ", error.localizedDescription)
-                    return
-                }
-                if let userID = Auth.auth().currentUser?.uid {
-                    let currentUserRef = Database.database().reference().child("profiles").child(userID)
-                    currentUserRef.updateChildValues(["profileImage": imageUrl])
-                }
-            }
+            print("Upload size is \(size)")
+            print("Upload success")
         }
     }
+    
+
+    
     
     //func uploadToCloud(fileURL : URL) {
       //  let storage = Storage.storage()
@@ -115,9 +118,11 @@ class createPostViewController: UIViewController {
 
 extension createPostViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate{
       func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
-        if let image = info[UIImagePickerController.InfoKey.editedImage.rawValue] as? UIImage {
+        if let image =  info["UIImagePickerControllerEditedImage"]as? UIImage {
+              selectedImage = image
+             print("success")
               profileImage.image = image
-                uploadImageToFireBase(image: image)
+              uploadImageToFireBase(image: image)
           } else {
               print("image wasnt selected")
           }
