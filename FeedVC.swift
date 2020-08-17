@@ -1,11 +1,3 @@
-//
-//  FeedVC.swift
-//  BeirutTrackingApp
-//
-//  Created by SPEAKFLUENCE GLOBAL on 13/08/2020.
-//  Copyright © 2020 Maya Bridgman. All rights reserved.
-//
-
 
 import UIKit
 import Firebase
@@ -20,14 +12,13 @@ class FeedVC: UITableViewController, UISearchBarDelegate{
     var currentUserImageUrl: String!
     var posts = [postStruct]()
     var selectedPost: Post!
-    var filteredPosts: [String]!
+    var currentPostsArray = [postStruct]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         getUsersData()
         getPosts()
         searchBar.delegate = self
-       // filteredPosts = posts
         // Do any additional setup after loading the view.
    //     tableView.register(PostCell.self, forCellReuseIdentifier: "PostCell")
     }
@@ -98,7 +89,7 @@ class FeedVC: UITableViewController, UISearchBarDelegate{
     }
    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "PostCell") as? PostCell else { return UITableViewCell() }
-        cell.nameLabel?.text = posts[indexPath.row].name
+    cell.nameLabel?.text = posts[indexPath.row].name
         cell.contactEmailLabel?.text = posts[indexPath.row].contactEmail
         cell.contactPhoneNumLabel?.text = posts[indexPath.row].contactPhoneNum
         cell.ageLabel?.text = posts[indexPath.row].age
@@ -110,12 +101,22 @@ class FeedVC: UITableViewController, UISearchBarDelegate{
     }
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        filteredPosts = []
-      //  for name in posts{
-        //    if name.lowercased().contains(searchText.lowercased()){
-          //      filteredPosts.append(name)
-            }
-      //  }
-    //}
+       // filteredPosts = []
+        //if searchText == ""{
+          //  for post in posts {
+            //            filteredPosts.append(post.name)
+              //         }
+            //}
+       // else{
+        //for post in posts {
+          //  if post.name?.lowercased().contains(searchText.lowercased()) == true {
+            //    filteredPosts.append(post.name)
+            //}
+        //}
+        //self.tableView.reloadData()
+            
+    }
+   // }
 }
+
 
