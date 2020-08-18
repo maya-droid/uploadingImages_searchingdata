@@ -4,7 +4,7 @@ import FirebaseAuth
 import FirebaseDatabase
 import FirebaseStorage
 
-class createPostViewController: UIViewController {
+class createPostViewController: UIViewController, UIImagePickerControllerDelegate & UINavigationControllerDelegate {
     
     
     @IBOutlet weak var profileImage: UIImageView!
@@ -23,7 +23,6 @@ class createPostViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(createPostViewController.handleSelect))
         profileImage.addGestureRecognizer(tapGesture)
         imagePicker = UIImagePickerController()
@@ -38,15 +37,13 @@ class createPostViewController: UIViewController {
     @objc func handleSelect(){
         let imagePicker = UIImagePickerController()
         imagePicker.delegate = self
+        imagePicker.allowsEditing = true
         present(imagePicker, animated: true, completion: nil)
     }
     
     
-    
-    
     @IBAction func post(_ sender: AnyObject) {
         let userID = Auth.auth().currentUser?.uid
-        
         Database.database().reference().child("profiles").child(userID!).observe(.value, with: { (snapshot) in
             let post: Dictionary<String, AnyObject> = [
                // "userImg":  as AnyObject,
@@ -67,30 +64,56 @@ class createPostViewController: UIViewController {
     
     
     
-    func uploadImageToFireBase(image: UIImage) {
+   // func uploadImageToFireBase(image: UIImage) {
         // Create the file metadata
-        uploadImageToFireBase(image: selectedImage)
-        let metadata = StorageMetadata()
-        metadata.contentType = "image/jpeg"
-        let storageRef = Storage.storage().reference()
-        let profileRef = storageRef.child("images/rivers.jpg")
+     //   let metadata = StorageMetadata()
+       // metadata.contentType = "image/jpeg"
+        //let storageRef = Storage.storage().reference()
+        //let profileRef = storageRef.child("images/rivers.jpg")
         // Upload the file to the path FILE_NAME
-        Storage.storage().reference().child("FILE_NAME").putData(image.jpegData(compressionQuality: 0.42)!, metadata: metadata) { (metadata, error) in
-            guard let metadata = metadata else {
+        //Storage.storage().reference().child("FILE_NAME").putData(image/.jpegData(compressionQuality: 0.42)!, metadata: metadata) { (metadata, error) in
+            //guard let metadata = metadata else {
               // Uh-oh, an error occurred!
-              print((error?.localizedDescription)!)
-              return
-            }
+              //print((error?.localizedDescription)!)
+              //return
+            //}
             // Metadata contains file metadata such as size, content-type.
-            let size = metadata.size
+            //let size = metadata.size
             
-            print("Upload size is \(size)")
-            print("Upload success")
-        }
+            //print("Upload size is \(size)")
+            //print("Upload success")
+        //}
+    //}
+    
+  func uploadImagePic(image: UIImage, name: String, filePath: String) {
+    guard let imageData: Data = image.jpegData(compressionQuality: 0.1) else {
+        return
     }
-    
 
-    
+    let metaDataConfig = StorageMetadata()
+    metaDataConfig.contentType = "image/jpg"
+
+    let storageRef = Storage.storage().reference(withPath: filePath)
+
+    storageRef.putData(imageData, metadata: metaDataConfig){ (metaData, error) in
+        if let error = error {
+            print(error.localizedDescription)
+
+            return
+        }
+
+        storageRef.downloadURL(completion: { (url: URL?, error: Error?) in
+            print(url?.absoluteString) // <- Download URL
+        })
+    }
+
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
+        if let pickedImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage {
+               self.profileImage.image = pickedImage
+               self.postBtn.isHidden = true
+               uploadImagePic(image: pickedImage)
+               picker.dismiss(animated: true, completion: nil)
+           }
     
     //func uploadToCloud(fileURL : URL) {
       //  let storage = Storage.storage()
@@ -114,19 +137,6 @@ class createPostViewController: UIViewController {
             
        // }
    // }
+//}
 }
 
-extension createPostViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate{
-      func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
-        if let image =  info["UIImagePickerControllerEditedImage"]as? UIImage {
-              selectedImage = image
-             print("success")
-              profileImage.image = image
-              uploadImageToFireBase(image: image)
-          } else {
-              print("image wasnt selected")
-          }
-
-        dismiss(animated: true, completion: nil)
-    }
-}
